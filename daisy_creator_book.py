@@ -36,8 +36,6 @@ from mutagen.id3 import ID3NoHeaderError
 import ConfigParser
 import daisy_creator_book_ui
 
-#TODO:  Trenner in mag und abc ebenso anpassen (itemSecond zu left usw
-#TODO:  2.Progress  in bhz und abc pruefens
 
 class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     """ 
