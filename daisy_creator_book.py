@@ -583,7 +583,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.textEditDaisy.append(u"<b>smil-Dateien geschrieben:</b> " +str(z))
 
     def splitFilename(self,  item):
-        """split filename into list"""
+        """split filename into list """
         if self.comboBoxDaisyTrenner.currentText()=="2. Unterstrich":
             itemSplit = item.split("_", 2)
         self.showDebugMessage( itemSplit )
