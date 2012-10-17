@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'daisy_creator_book.ui'
 #
-# Created: Mon Oct 15 21:14:02 2012
+# Created: Wed Oct 17 20:33:48 2012
 #      by: PyQt4 UI code generator 4.8.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -41,7 +41,7 @@ class Ui_DaisyMain(object):
         font = QtGui.QFont()
         font.setPointSize(16)
         self.label_1.setFont(font)
-        self.label_1.setText(QtGui.QApplication.translate("DaisyMain", "Daisy-DTB-Tool", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_1.setText(QtGui.QApplication.translate("DaisyMain", "Daisy-Copy-Tool", None, QtGui.QApplication.UnicodeUTF8))
         self.label_1.setObjectName(_fromUtf8("label_1"))
         self.toolButtonCopySource = QtGui.QToolButton(self.tab)
         self.toolButtonCopySource.setGeometry(QtCore.QRect(640, 94, 24, 25))

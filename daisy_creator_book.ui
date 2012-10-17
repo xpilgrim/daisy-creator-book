@@ -68,7 +68,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Daisy-DTB-Tool</string>
+         <string>Daisy-Copy-Tool</string>
         </property>
        </widget>
        <widget class="QToolButton" name="toolButtonCopySource">
