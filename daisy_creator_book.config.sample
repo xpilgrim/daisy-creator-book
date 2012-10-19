@@ -1,0 +1,6 @@
+# sample-Config-File of daisy_creator_book.config
+
+[Ordner]
+Buch=/home/mydir/data_book
+Buch-Meta=/home/mydir/data_book/Daisy_Meta
+

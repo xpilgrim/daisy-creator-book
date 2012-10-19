@@ -36,7 +36,6 @@ from mutagen.id3 import ID3NoHeaderError
 import ConfigParser
 import daisy_creator_book_ui
 
-
 class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     """ 
     mainClass
@@ -53,9 +52,9 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.setupUi(self)
         # to display debugMessages on console
         self.app_debugMod = "yes"
-        # datPaths 
-        self.app_bookPfad = "/home/buero2/data_server_2/Data_2012/Produktion_HB"
-        self.app_bookPfadMeta = "/home/buero2/data_server_2/Data_2012/Produktion_HB/Daisy_Meta"
+        # dataPaths 
+        self.app_bookPfad = QtCore.QDir.homePath() 
+        self.app_bookPfadMeta = QtCore.QDir.homePath() 
         # connect Actions to GUIElements
         self.connectActions()
     
@@ -70,6 +69,24 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.toolButtonDaisySource.clicked.connect(self.actionOpenDaisySource)
         self.pushButtonClose1.clicked.connect(self.actionQuit)
         self.pushButtonClose2.clicked.connect(self.actionQuit)
+
+    def readConfig(self ):
+        """read Config from file"""
+        fileNotExist = None
+        try:
+            with open( "daisy_creator_mag.config" ) as f: pass
+        except IOError as e:
+            self.showDebugMessage(  u"File not exists" )
+            self.textEdit.append("<b>Config-Datei konnte nicht geladen werden...</b>")   
+            fileNotExist = "yes"
+        
+        if  fileNotExist is not None:
+            return
+        
+        config = ConfigParser.RawConfigParser()
+        config.read("daisy_creator_mag.config")
+        self.app_bookPfad = config.get('Ordner', 'Buch')
+        self.app_bookPfadMeta = config.get('Ordner', 'Buch-Meta')
     
     def actionOpenCopySource(self):
         """Source of audios to copy"""
@@ -290,6 +307,17 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     
     def metaLoadFile(self ):
         """load metaData from file"""
+        fileNotExist = None
+        try:
+            with open( str(self.lineEditMetaSource.text()) ) as f: pass
+        except IOError as e:
+            self.showDebugMessage(  u"File not exists" )
+            self.textEdit.append("<b>Meta-Datei konnte nicht geladen werden</b>")   
+            fileNotExist = "yes"
+        
+        if  fileNotExist is not None:
+            return
+        
         config = ConfigParser.RawConfigParser()
         # Path must be recodet to String from QTString 
         config.read(str(self.lineEditMetaSource.text()))
