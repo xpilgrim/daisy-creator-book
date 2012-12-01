@@ -36,6 +36,8 @@ from mutagen.id3 import ID3NoHeaderError
 import ConfigParser
 import daisy_creator_book_ui
 
+#TODO:  Metafile wenn file nicht gefunden filename anzeigen
+
 class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     """ 
     mainClass
@@ -87,6 +89,25 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         config.read("daisy_creator_mag.config")
         self.app_bookPfad = config.get('Ordner', 'Buch')
         self.app_bookPfadMeta = config.get('Ordner', 'Buch-Meta')
+
+    def readHelp(self ):
+        """read Readme from file"""
+        fileNotExist = None
+        try:
+            with open( "README.md" ) as f: pass
+        except IOError as e:
+            self.showDebugMessage(  u"File not exists" )
+            self.textEdit.append("<b>Help-Datei konnte nicht geladen werden...</b>")   
+            fileNotExist = "yes"
+        
+        if  fileNotExist is not None:
+            return
+        
+        fobj = open("README.md")
+        for line in fobj:
+            #print line.rstrip()
+            self.textEditHelp.append(line)
+        fobj.close()
     
     def actionOpenCopySource(self):
         """Source of audios to copy"""
@@ -473,7 +494,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
                     continue
                 # trennen
                 itemSplit = self.splitFilename( item)
-                cTitle = self.extractTitel( itemSplit)                
+                cTitle = self.extractTitle( itemSplit)                
                 fOutFile.write('<h'+ itemSplit[1]+' id="cnt_'+str(z).zfill(4)+'"><a href="'+str(z).zfill(4)+'.smil#txt_'+str(z).zfill(4)+'">'+ cTitle + '</a></h'+itemSplit[1]+'>'+ '\r\n')
             
             fOutFile.write( "</body>"+ '\r\n')
@@ -512,7 +533,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
                 z +=1
                 # trennen
                 itemSplit = self.splitFilename( item)
-                cTitle = self.extractTitel( itemSplit)    
+                cTitle = self.extractTitle( itemSplit)    
                 fOutFile.write('<ref src="'+str(z).zfill(4)+'.smil" title="' + cTitle + '" id="smil_' + str(z).zfill(4) + '"/>'+'\r\n')
             
             fOutFile.write( '</body>'+'\r\n')
@@ -536,7 +557,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
                 self.textEditDaisy.append( str(z).zfill(4) +u".smil - File schreiben")
                 # trennen
                 itemSplit = self.splitFilename( item)
-                cTitle = self.extractTitel( itemSplit)    
+                cTitle = self.extractTitle( itemSplit)    
                 
                 fOutFile.write( '<?xml version="1.0" encoding="utf-8"?>'+ '\r\n' )
                 fOutFile.write( '<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN" "http://www.w3.org/TR/REC-smil/SMIL10.dtd">'+'\r\n')
@@ -618,7 +639,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.showDebugMessage( len(itemSplit))
         return itemSplit
     
-    def extractTitel(self, itemSplit):
+    def extractTitle(self, itemSplit):
         # letzter teil
         itemLeft = itemSplit[len(itemSplit)-1]
         # davon file-ext abtrennen
@@ -654,18 +675,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         # defaultValue of Spinboxes
         self.spinBoxEbenen.setValue(1)
         self.spinBoxPages.setValue(0)
-        self.textEditHelp.append(u"<b>Kurzanleitung</b><br> ")
-        self.textEditHelp.append(u"1. <b>Copy:</b> Audios auswählen und in gewünschtes Verzeichnis kopieren ")
-        self.textEditHelp.append(u"    Dabei kann die Bitrate korrigiert und id3Tags entfernt werden")
-        self.textEditHelp.append(u"2. <b>Meta:</b> Metadaten laden oder eintragen")
-        self.textEditHelp.append(u"3. <b>DAISY:</b> Daisyfizieren<br>")
-        self.textEditHelp.append(u"<b>Voraussetzungen, Arbeitsweise</b>")
-        self.textEditHelp.append(u"   - Grundlage für die Daisyfizierung sind die Audiodateien")
-        self.textEditHelp.append(u"   - Die Dateinamen müssen folgender Syntax entsprechen:")
-        self.textEditHelp.append(u"     Nummer_Ebenen-Nr_Titel.mp3")
-        self.textEditHelp.append(u"     Beispiel: 1024_2_Titel.mp3")
-        self.textEditHelp.append(u"   - Die Einstellung der Ebene muss der tiefsten Ebenen-Nr. der Dateien entsprechen<br>")
-        self.textEditHelp.append(u"Der Daisy-Creator wurde im <a href='http://www.kom-in.de'>KOM-IN-Netzwerk</a> (www.kom-in.de) entwickelt")
+        # Help-Text
+        self.readHelp()
         self.show()
  
 if __name__=='__main__':
