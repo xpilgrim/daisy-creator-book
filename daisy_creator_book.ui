@@ -68,7 +68,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Daisy-Copy-Tool</string>
+         <string>Daisy-Copy</string>
         </property>
        </widget>
        <widget class="QToolButton" name="toolButtonCopySource">
@@ -100,9 +100,9 @@
        <widget class="QCheckBox" name="checkBoxCopyBitrateChange">
         <property name="geometry">
          <rect>
-          <x>23</x>
-          <y>180</y>
-          <width>301</width>
+          <x>180</x>
+          <y>160</y>
+          <width>151</width>
           <height>22</height>
          </rect>
         </property>
@@ -143,7 +143,7 @@
         <property name="geometry">
          <rect>
           <x>330</x>
-          <y>180</y>
+          <y>160</y>
           <width>301</width>
           <height>22</height>
          </rect>
@@ -204,6 +204,29 @@
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
+       <widget class="QComboBox" name="comboBoxPrefBitrate">
+        <property name="geometry">
+         <rect>
+          <x>24</x>
+          <y>190</y>
+          <width>610</width>
+          <height>27</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_13">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>160</y>
+          <width>71</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Datenrate</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
@@ -224,7 +247,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Daisy-Metadata-Tool</string>
+         <string>Daisy-Metadata</string>
         </property>
        </widget>
        <widget class="Line" name="line_3">
@@ -546,7 +569,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Daisy-Creator-Tool</string>
+         <string>Daisy-Creator</string>
         </property>
        </widget>
        <widget class="Line" name="line_2">
@@ -720,65 +743,6 @@
         </property>
         <property name="text">
          <string>Quit</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QWidget" name="tab_4">
-       <attribute name="title">
-        <string>Pref</string>
-       </attribute>
-       <widget class="QLabel" name="label_12">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>30</y>
-          <width>610</width>
-          <height>25</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>16</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Einstellungen</string>
-        </property>
-       </widget>
-       <widget class="Line" name="line_4">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>60</y>
-          <width>790</width>
-          <height>3</height>
-         </rect>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_13">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>90</y>
-          <width>610</width>
-          <height>17</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Datenrate</string>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="comboBoxPrefBitrate">
-        <property name="geometry">
-         <rect>
-          <x>24</x>
-          <y>120</y>
-          <width>610</width>
-          <height>27</height>
-         </rect>
         </property>
        </widget>
       </widget>
