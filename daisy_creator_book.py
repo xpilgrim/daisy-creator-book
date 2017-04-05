@@ -34,8 +34,6 @@ from mutagen.id3 import ID3NoHeaderError
 import ConfigParser
 import daisy_creator_book_ui
 
-#TODO:  Metafile wenn file nicht gefunden filename anzeigen
-
 
 class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     """
@@ -57,6 +55,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.app_bookPfad = QtCore.QDir.homePath()
         self.app_bookPfadMeta = QtCore.QDir.homePath()
         # connect Actions to GUIElements
+        # we need ext package lame
+        self.app_lame = ""
         self.connectActions()
 
     def connectActions(self):
@@ -73,39 +73,40 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
 
     def readConfig(self):
         """read Config from file"""
-        fileNotExist = None
-        try:
-            with open( "daisy_creator_mag.config" ) as f: pass
-        except IOError as e:
+        fileExist = os.path.isfile("daisy_creator_book.config")
+        if fileExist is False:
             self.showDebugMessage(u"File not exists")
-            self.textEdit.append("<b>Config-Datei konnte nicht geladen werden...</b>")
-            fileNotExist = "yes"
-
-        if  fileNotExist is not None:
+            self.textEdit.append(
+                "<font color='red'>"
+                + "Config-Datei konnte nicht geladen werden: </font>"
+                + "daisy_creator_mag.config")
             return
 
         config = ConfigParser.RawConfigParser()
-        config.read("daisy_creator_mag.config")
-        self.app_bookPfad = config.get('Ordner', 'Buch')
-        self.app_bookPfadMeta = config.get('Ordner', 'Buch-Meta')
+        config.read("daisy_creator_book.config")
+        self.app_bookPath = config.get('Ordner', 'Buch')
+        self.app_bookPathMeta = config.get('Ordner', 'Buch-Meta')
+        self.app_lame = config.get('Programme', 'LAME')
 
     def readHelp(self):
         """read Readme from file"""
-        fileNotExist = None
-        try:
-            with open( "README.md" ) as f: pass
-        except IOError as e:
-            self.showDebugMessage(u"File not exists")
-            self.textEdit.append("<b>Help-Datei konnte nicht geladen werden...</b>")
-            fileNotExist = "yes"
-
-        if  fileNotExist is not None:
+        fileExist = os.path.isfile("README.md")
+        if fileExist is False:
+            self.showDebugMessage("File not exists")
+            self.textEdit.append(
+                "<font color='red'>"
+                + "Hilfe-Datei konnte nicht geladen werden: </font>"
+                + "README.md")
             return
 
         fobj = open("README.md")
         for line in fobj:
-            #print line.rstrip()
             self.textEditHelp.append(line)
+        # set cursor on top of helpfile
+        cursor = self.textEditHelp.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.Start,
+                            QtGui.QTextCursor.MoveAnchor, 0)
+        self.textEditHelp.setTextCursor(cursor)
         fobj.close()
 
     def actionOpenCopySource(self):
@@ -114,7 +115,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         dirSource = QtGui.QFileDialog.getExistingDirectory(
                         self,
                         "Quell-Ordner",
-                        self.app_bookPfad
+                        self.app_bookPath
                     )
         # Don't attempt to open if open dialog
         # was cancelled away.
@@ -128,7 +129,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         dirSource = QtGui.QFileDialog.getExistingDirectory(
                         self,
                         "Quell-Ordner",
-                        self.app_bookPfad
+                        self.app_bookPath
                     )
         # Don't attempt to open if open dialog
         # was cancelled away.
@@ -142,7 +143,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         dirDest = QtGui.QFileDialog.getExistingDirectory(
                         self,
                         "Ziel-Ordner",
-                        self.app_bookPfad
+                        self.app_bookPath
                     )
         # Don't attempt to open if open dialog
         # was cancelled away.
@@ -156,7 +157,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         mfile = QtGui.QFileDialog.getOpenFileName(
                         self,
                         "Daisy_Meta",
-                        self.app_bhzPfadMeta
+                        self.app_bookPathMeta
                     )
         # Don't attempt to open if open dialog
         # was cancelled away.
@@ -328,28 +329,29 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
             return None
 
     def metaLoadFile(self):
-        """load metaData from file"""
-        fileNotExist = None
-        try:
-            with open(str(self.lineEditMetaSource.text())) as f: pass
-        except IOError as e:
-            self.showDebugMessage(u"File not exists")
-            self.textEdit.append("<b>Meta-Datei konnte nicht geladen werden</b>")
-            fileNotExist = "yes"
-
-        if fileNotExist is not None:
+        """load file with meta-data"""
+        fileExist = os.path.isfile(self.lineEditMetaSource.text())
+        if fileExist is False:
+            self.showDebugMessage("File not exists")
+            self.textEdit.append(
+                "<font color='red'>"
+                + "Meta-Datei konnte nicht geladen werden</font>: "
+                + os.path.basename(str(self.lineEditMetaSource.text())))
             return
 
         config = ConfigParser.RawConfigParser()
-        # Path must be recodet to String from QTString
+
+        # change path from QTString to String
         config.read(str(self.lineEditMetaSource.text()))
         self.lineEditMetaProducer.setText(config.get('Daisy_Meta', 'Produzent'))
         self.lineEditMetaAutor.setText(config.get('Daisy_Meta', 'Autor'))
         self.lineEditMetaTitle.setText(config.get('Daisy_Meta', 'Titel'))
         self.lineEditMetaEdition.setText(config.get('Daisy_Meta', 'Edition'))
         self.lineEditMetaNarrator.setText(config.get('Daisy_Meta', 'Sprecher'))
-        self.lineEditMetaKeywords.setText(config.get('Daisy_Meta', 'Stichworte'))
-        self.lineEditMetaRefOrig.setText(config.get('Daisy_Meta', 'ISBN/Ref-Nr.Original'))
+        self.lineEditMetaKeywords.setText(config.get('Daisy_Meta',
+                        'Stichworte'))
+        self.lineEditMetaRefOrig.setText(config.get('Daisy_Meta',
+                        'ISBN/Ref-Nr.Original'))
         self.lineEditMetaPublisher.setText(config.get('Daisy_Meta', 'Verlag'))
         self.lineEditMetaYear.setText(config.get('Daisy_Meta', 'Jahr'))
 
@@ -408,7 +410,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         lTotalElapsedTime.append(0)
         lFileTime = []
         for item in dirAudios:
-            fileToCheck = os.path.join(str(self.lineEditDaisySource.text()), item)
+            fileToCheck = os.path.join(
+                str(self.lineEditDaisySource.text()), item)
             audioSource = MP3(fileToCheck)
             self.showDebugMessage(item + " " + str(audioSource.info.length))
             totalAudioLength += audioSource.info.length
@@ -419,6 +422,26 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
             lTimes.append(lTotalElapsedTime)
             lTimes.append(lFileTime)
         return lTimes
+
+    def checkPackages(self, package):
+        """
+        check if package is installed
+        needs subprocess, os
+        http://stackoverflow.com/
+        questions/11210104/check-if-a-program-exists-from-a-python-script
+        """
+        try:
+            devnull = open(os.devnull, "w")
+            subprocess.Popen([package], stdout=devnull,
+                            stderr=devnull).communicate()
+        except OSError as e:
+            if e.errno == os.errno.ENOENT:
+                errorMessage = (u"Es fehlt das Paket:\n " + package
+                                + u"\nZur Nutzung des vollen Funktionsumfanges "
+                                + "muss es installiert werden!")
+                self.showDialogCritical(errorMessage)
+                self.textEdit.append(
+                    "<font color='red'>Es fehlt das Paket: </font> " + package)
 
     def writeNCC(self, cTotalTime, zMp3, dirAudios):
         """write NCC-Page"""
@@ -661,6 +684,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     def main(self):
         """mainFunction"""
         self.showDebugMessage(u"let's rock")
+        self.readConfig()
+        self.checkPackages(self.app_lame)
         # set msic parameters
         self.progressBarCopy.setValue(0)
         self.progressBarDaisy.setValue(0)
