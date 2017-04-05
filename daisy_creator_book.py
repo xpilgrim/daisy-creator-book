@@ -13,7 +13,8 @@ Dieses Programm
 
 Zusatz-Modul benoetigt:
 python-mutagen
-sudo apt-get install python-mutagen
+lame
+sudo apt-get install python-mutagen lame
 
 GUI aktualisieren mit:
 pyuic4 daisy_creator_book.ui -o daisy_creator_book_ui.py
@@ -188,51 +189,55 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.showDebugMessage(dirsSource)
         self.textEdit.append("<b>Kopieren:</b>")
         z = 0
-        zList = len(dirsSource)
-        self.showDebugMessage(zList)
+        nDirsSource = len(dirsSource)
+        self.showDebugMessage(nDirsSource)
         dirsSource.sort()
+
+        # loop trough files
         for item in dirsSource:
-            if item[len(item)-4:len(item)] == ".MP3" or item[len(item)-4:len(item)] == ".mp3":
-                fileToCopySource = self.lineEditCopySource.text() + "/" + item
-                # pruefen ob file exists
-                fileNotExist = None
-                try:
-                    with open(fileToCopySource) as f: pass
-                except IOError as e:
-                    self.showDebugMessage(u"File not exists")
-                    fileNotExist = "yes"
-                    # max Anzahl korrigieren und Progress aktualisieren
-                    zList = zList - 1
-                    pZ = z * 100 / zList
-                    self.progressBarCopy.setValue(pZ)
+            if (item[len(item) - 4:len(item)] != ".MP3"
+                            and item[len(item) - 4:len(item)] != ".mp3"):
+                continue
 
+            fileToCopySource = self.lineEditCopySource.text() + "/" + item
+            # check if file exist
+            fileExist = os.path.isfile(fileToCopySource)
+            if fileExist is False:
+                self.showDebugMessage("File not exists")
+                # change max number and update progress
+                nDirsSource = nDirsSource - 1
+                pZ = z * 100 / nDirsSource
+                self.progressBarCopy.setValue(pZ)
+                self.textEdit.append(
+                        "<b>Datei konnte nicht kopiert werden: </b>"
+                        + fileToCopySource)
                 self.showDebugMessage(fileToCopySource)
+                self.textEdit.append("<b>Uebersprungen</b>:")
+                self.textEdit.append(fileToCopySource)
+                continue
 
-                if fileNotExist is None:
-                    # extention lowercase
-                    filename = item[0:len(item) - 4] + ".mp3"
-                    #fileToCopyDest = self.lineEditCopyDest.text() + "/" + item
-                    fileToCopyDest = self.lineEditCopyDest.text() + "/" + filename
-                    self.textEdit.append(fileToCopyDest)
-                    self.showDebugMessage(fileToCopySource)
-                    self.showDebugMessage(fileToCopyDest)
+            #filename
+            # extention lowercase
+            filename = item[0:len(item) - 4] + ".mp3"
+            fileToCopyDest = self.lineEditCopyDest.text() + "/" + filename
+            self.textEdit.append(fileToCopyDest)
+            self.showDebugMessage(fileToCopySource)
+            self.showDebugMessage(fileToCopyDest)
 
-                    # Bitrate checken, eventuell aendern und gleich in Ziel neu encodieren
-                    isChangedAndCopy = self.checkChangeBitrateAndCopy(fileToCopySource, fileToCopyDest)
-                    # nicht geaendert also kopieren
-                    if  isChangedAndCopy is None:
-                        self.copyFile(fileToCopySource, fileToCopyDest)
+            # check Bitrate, when necessary recode in new destination
+            isChangedAndCopy = self.checkChangeBitrateAndCopy(
+                fileToCopySource, fileToCopyDest)
+            # nothing to do, only copy
+            if  isChangedAndCopy is None:
+                self.copyFile(fileToCopySource, fileToCopyDest)
 
-                    self.checkCangeId3(fileToCopyDest)
-                    z += 1
-                    self.showDebugMessage(z)
-                    self.showDebugMessage(zList)
-                    pZ = z * 100 / zList
-                    self.showDebugMessage(pZ)
-                    self.progressBarCopy.setValue(pZ)
-                else:
-                    self.textEdit.append("<b>Uebersprungen</b>:")
-                    self.textEdit.append(fileToCopySource)
+            self.checkCangeId3(fileToCopyDest)
+            z += 1
+            self.showDebugMessage(z)
+            self.showDebugMessage(nDirsSource)
+            pZ = z * 100 / nDirsSource
+            self.showDebugMessage(pZ)
+            self.progressBarCopy.setValue(pZ)
 
         self.showDebugMessage(z)
         # CopyDestination is Source for Daisy
