@@ -1,0 +1,8 @@
+*.config
+*.*~
+.eric4project
+*.e4p
+*.pyc
+*.nja
+__init__.py
+*.py
