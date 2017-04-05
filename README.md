@@ -35,13 +35,14 @@ Here, you can select:
 1. Change bitrate
 This check the bitrate of each audiofile and changes it to the choosen rate on the "Preferences-Tab"
 2. Delete ID3-Tags
+3. Bitrate of mp3 audio files
 Some Audioeditors write ID3-Version 2 Tags. This will not correspond to dtb 2.02
 
 
 filename-example
 -----------
 1001_1_Title_of_the_book.mp3
-1002_2_About this book.mp3
+1002_2_About_this_book.mp3
 1003_1_Capitel_one.mp3
 
 
