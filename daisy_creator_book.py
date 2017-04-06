@@ -287,8 +287,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         """check Bitrate, maybe change it """
         isChangedAndCopy = None
         audioSource = MP3(fileToCopySource)
-        if (audioSource.info.bitrate ==
-            int(self.comboBoxPrefBitrate.currentText()) * 1000):
+        if (audioSource.info.bitrate / 1000 ==
+            int(self.comboBoxPrefBitrate.currentText())):
             return isChangedAndCopy
 
         isEncoded = None
@@ -363,7 +363,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     def encodeFile(self, fileToCopySource, fileToCopyDest):
         """encode mp3-files """
         self.showDebugMessage(u"encode_file")
-        #damit die uebergabe der befehle richtig klappt muessen alle cmds im richtigen zeichensatz als strings encoded sein
+        # characterset of commands is importand
+        # encoding in the right manner
         c_lame_encoder = "/usr/bin/lame"
         self.showDebugMessage(u"type c_lame_encoder")
         self.showDebugMessage(type(c_lame_encoder))
@@ -373,8 +374,10 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         self.showDebugMessage(u"type(fileToCopyDest)")
         self.showDebugMessage(type(fileToCopyDest))
 
-        #p = subprocess.Popen([c_lame_encoder, "-b",  "64", "-m",  "m",  fileToCopySource, fileToCopyDest ],  stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate(  )
-        p = subprocess.Popen([c_lame_encoder, "-b", self.comboBoxPrefBitrate.currentText(), "-m", "m", fileToCopySource, fileToCopyDest ],  stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate(  )
+        p = subprocess.Popen([c_lame_encoder, "-b",
+            self.comboBoxPrefBitrate.currentText(), "-m", "m",
+            fileToCopySource, fileToCopyDest],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
         self.showDebugMessage(u"returncode 0")
         self.showDebugMessage(p[0])
@@ -455,7 +458,8 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         dirAudios = []
         dirItems.sort()
         for item in dirItems:
-            if item[len(item)-4:len(item) ] == ".MP3" or item[len(item)-4:len(item)] == ".mp3":
+            if (item[len(item) - 4:len(item)] == ".MP3"
+                or item[len(item) - 4:len(item)] == ".mp3"):
                 dirAudios.append(item)
                 self.textEditDaisy.append(item)
                 zMp3 += 1
@@ -466,9 +470,9 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         lTotalElapsedTime = lTimes[1]
         lFileTime = lTimes[2]
         print totalAudioLength
-        totalTime = timedelta(seconds = totalAudioLength)
-        # umwandlung von timedelta in string: minuten und sekunden musten immer zweistllig sein,
-        # damit einstellige stunde eine null bekommt :zfill(8)
+        totalTime = timedelta(seconds=totalAudioLength)
+        # change from timedelta in to string
+        # hours, minits and seconds must have 2 digits (zfill(8))
         lTotalTime = str(totalTime).split(".")
         cTotalTime = lTotalTime[0].zfill(8)
         #str(cTotalTime[0]).zfill(8)
@@ -523,104 +527,146 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
     def writeNCC(self, cTotalTime, zMp3, dirAudios):
         """write NCC-Page"""
         try:
-            fOutFile = open(os.path.join(str(self.lineEditDaisySource.text()), "ncc.html"), 'w')
+            fOutFile = open(
+                os.path.join(
+                    str(self.lineEditDaisySource.text()), "ncc.html"), 'w')
         except IOError as (errno, strerror):
             self.showDebugMessage("I/O error({0}): {1}".format(errno, strerror))
-        else:
-            self.textEditDaisy.append(u"<b>NCC-Datei schreiben...</b>")
-            fOutFile.write('<?xml version="1.0" encoding="utf-8"?>' + '\r\n')
-            fOutFile.write('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'+ '\r\n')
-            fOutFile.write('<html xmlns="http://www.w3.org/1999/xhtml">' + '\r\n')
-            fOutFile.write('<head>'+ '\r\n')
-            fOutFile.write('<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>'+ '\r\n')
-            fOutFile.write('<title>' + self.lineEditMetaTitle.text() + '</title>' + '\r\n')
+        #else:
+        self.textEditDaisy.append(u"<b>NCC-Datei schreiben...</b>")
+        fOutFile.write('<?xml version="1.0" encoding="utf-8"?>' + '\r\n')
+        fOutFile.write('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0'
+            + ' Transitional//EN"'
+            + ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+            + '\r\n')
+        fOutFile.write('<html xmlns="http://www.w3.org/1999/xhtml">' + '\r\n')
+        fOutFile.write('<head>' + '\r\n')
+        fOutFile.write('<meta http-equiv="Content-type" '
+            + 'content="text/html; charset=utf-8"/>' + '\r\n')
+        fOutFile.write('<title>' + self.lineEditMetaTitle.text()
+            + '</title>' + '\r\n')
 
-            fOutFile.write('<meta name="ncc:generator" content="KOM-IN-DaisyCreator"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:revision" content="1"/>' + '\r\n')
-            today = datetime.date.today()
-            fOutFile.write('<meta name="ncc:producedDate" content="' + today.strftime("%Y-%m-%d") + '"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:revisionDate" content="' + today.strftime("%Y-%m-%d") + '"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:tocItems" content="' + str( zMp3 ) + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:generator" '
+            + 'content="KOM-IN-DaisyCreator"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:revision" content="1"/>' + '\r\n')
+        today = datetime.date.today()
+        fOutFile.write('<meta name="ncc:producedDate" content="'
+            + today.strftime("%Y-%m-%d") + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:revisionDate" content="'
+            + today.strftime("%Y-%m-%d") + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:tocItems" content="'
+            + str(zMp3) + '"/>' + '\r\n')
 
-            fOutFile.write('<meta name="ncc:totalTime" content="' + cTotalTime+ '"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:narrator" content="' + self.lineEditMetaNarrator.text() + '"/>'+ '\r\n')
-            fOutFile.write('<meta name="ncc:pageNormal" content="0"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:pageFront" content="0"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:pageSpecial" content="0"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:sidebars" content="0"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:prodNotes" content="0"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:footnotes" content="0"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:depth" content="' + str(self.spinBoxEbenen.value()) + '"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:maxPageNormal" content="' +str(self.spinBoxPages.value()) +'"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:charset" content="utf-8"/>' + '\r\n')
-            fOutFile.write('<meta name="ncc:multimediaType" content="audioNcc"/>' + '\r\n')
-            #fOutFile.write( '<meta name="ncc:kByteSize" content=" "/>'+ '\r\n')
-            fOutFile.write('<meta name="ncc:setInfo" content="1 of 1"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:totalTime" content="'
+            + cTotalTime + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:narrator" content="'
+            + self.lineEditMetaNarrator.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:pageNormal" content="0"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:pageFront" content="0"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:pageSpecial" content="0"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:sidebars" content="0"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:prodNotes" content="0"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:footnotes" content="0"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:depth" content="'
+            + str(self.spinBoxEbenen.value()) + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:maxPageNormal" content="'
+            + str(self.spinBoxPages.value()) + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:charset" content="utf-8"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:multimediaType" content="audioNcc"/>'
+            + '\r\n')
+        #fOutFile.write( '<meta name="ncc:kByteSize" content=" "/>'+ '\r\n')
+        fOutFile.write('<meta name="ncc:setInfo" content="1 of 1"/>' + '\r\n')
 
-            fOutFile.write('<meta name="ncc:sourceDate" content="' + self.lineEditMetaYear.text()+ '"/>'+ '\r\n')
-            fOutFile.write('<meta name="ncc:sourceEdition" content="' + self.lineEditMetaEdition.text() + '"/>'+ '\r\n')
-            fOutFile.write('<meta name="ncc:sourcePublisher" content="' + self.lineEditMetaPublisher.text()+ '"/>'+ '\r\n')
+        fOutFile.write('<meta name="ncc:sourceDate" content="'
+            + self.lineEditMetaYear.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:sourceEdition" content="'
+            + self.lineEditMetaEdition.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="ncc:sourcePublisher" content="'
+            + self.lineEditMetaPublisher.text() + '"/>' + '\r\n')
 
-            #Anzahl files = Records 2x + ncc.html + master.smil
-            fOutFile.write('<meta name="ncc:files" content="' + str(zMp3 + zMp3 + 2) + '"/>'+ '\r\n')
-            #fOutFile.write('<meta name="ncc:format" content="Daisy 2.0"/>'+ '\r\n')
+        #Anzahl files = Records 2x + ncc.html + master.smil
+        fOutFile.write('<meta name="ncc:files" content="'
+            + str(zMp3 + zMp3 + 2) + '"/>' + '\r\n')
+        #fOutFile.write('<meta name="ncc:format" content="Daisy 2.0"/>'+ '\r\n')
 
-            fOutFile.write('<meta name="ncc:producer" content="' + self.lineEditMetaProducer.text()+ '"/>'+ '\r\n')
-            #fOutFile.write('<meta name="ncc:charset" content="ISO-8859-1"/>'+ '\r\n')
+        fOutFile.write('<meta name="ncc:producer" content="'
+            + self.lineEditMetaProducer.text() + '"/>' + '\r\n')
 
-            fOutFile.write('<meta name="dc:creator" content="' + self.lineEditMetaAutor.text()+ '"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:date" content="' + today.strftime("%Y-%m-%d")+ '"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:format" content="Daisy 2.02"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:identifier" content="' + self.lineEditMetaRefOrig.text()+ '"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:language" content="de" scheme="ISO 639"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:publisher" content="' + self.lineEditMetaPublisher.text()+ '"/>'+ '\r\n')
+        fOutFile.write('<meta name="dc:creator" content="'
+            + self.lineEditMetaAutor.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:date" content="'
+            + today.strftime("%Y-%m-%d") + '"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:format" content="Daisy 2.02"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:identifier" content="'
+            + self.lineEditMetaRefOrig.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:language" content="de"'
+                        + ' scheme="ISO 639"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:publisher" content="'
+            + self.lineEditMetaPublisher.text() + '"/>' + '\r\n')
 
-            fOutFile.write('<meta name="dc:source" content="' +self.lineEditMetaRefOrig.text()+ '"/>'+ '\r\n')
-            #fOutFile.write('<meta name="dc:sourceDate" content="' + self.lineEditMetaYear.text()+ '"/>'+ '\r\n')
-            #fOutFile.write('<meta name="dc:sourceEdition" content="' +self.lineEditMetaEdition.text()+ '"/>'+ '\r\n')
-            #fOutFile.write('<meta name="dc:sourcePublisher" content="' + self.lineEditMetaPublisher.text()+ '"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:subject" content="' + self.lineEditMetaKeywords.text()+ '"/>'+ '\r\n')
-            fOutFile.write('<meta name="dc:title" content="' +self.lineEditMetaTitle.text()+ '"/>'+ '\r\n')
-            # Medibus-OK items
-            fOutFile.write('<meta name="prod:audioformat" content="wave 44 kHz"/>'+ '\r\n')
-            fOutFile.write('<meta name="prod:compression" content="mp3 ' + self.comboBoxPrefBitrate.currentText()  + '/ kb/s"/>'+ '\r\n')
-            fOutFile.write('<meta name="prod:localID" content=" "/>' + '\r\n')
-            fOutFile.write('</head>' + '\r\n')
-            fOutFile.write('<body>' + '\r\n')
-            z = 0
-            for item in dirAudios:
-                z += 1
-                if z == 1:
-                    fOutFile.write('<h1 class="title" id="cnt_0001"><a href="0001.smil#txt_0001">' + self.lineEditMetaAutor.text()+ ": " + self.lineEditMetaTitle.text() + '</a></h1>'+ '\r\n')
-                    continue
-                # trennen
-                itemSplit = self.splitFilename(item)
-                cTitle = self.extractTitle(itemSplit)
-                fOutFile.write('<h'+ itemSplit[1]+' id="cnt_'+str(z).zfill(4)+'"><a href="'+str(z).zfill(4)+'.smil#txt_'+str(z).zfill(4)+'">'+ cTitle + '</a></h'+itemSplit[1]+'>'+ '\r\n')
+        fOutFile.write('<meta name="dc:source" content="'
+            + self.lineEditMetaRefOrig.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:subject" content="'
+            + self.lineEditMetaKeywords.text() + '"/>' + '\r\n')
+        fOutFile.write('<meta name="dc:title" content="'
+            + self.lineEditMetaTitle.text() + '"/>' + '\r\n')
+        # Medibus-OK items
+        fOutFile.write('<meta name="prod:audioformat" content="wave 44 kHz"/>'
+            + '\r\n')
+        fOutFile.write('<meta name="prod:compression" content="mp3 '
+            + self.comboBoxPrefBitrate.currentText() + '/ kb/s"/>' + '\r\n')
+        fOutFile.write('<meta name="prod:localID" content=" "/>' + '\r\n')
+        fOutFile.write('</head>' + '\r\n')
+        fOutFile.write('<body>' + '\r\n')
+        z = 0
+        for item in dirAudios:
+            z += 1
+            if z == 1:
+                fOutFile.write('<h1 class="title" id="cnt_0001">'
+                + '<a href="0001.smil#txt_0001">'
+                + self.lineEditMetaAutor.text() + ": "
+                + self.lineEditMetaTitle.text() + '</a></h1>' + '\r\n')
+                continue
+            # trennen
+            itemSplit = self.splitFilename(item)
+            cTitle = self.extractTitle(itemSplit)
+            fOutFile.write('<h' + itemSplit[1] + ' id="cnt_' + str(z).zfill(4)
+                + '"><a href="' + str(z).zfill(4) + '.smil#txt_'
+                + str(z).zfill(4) + '">' + cTitle + '</a></h'
+                + itemSplit[1] + '>' + '\r\n')
 
-            fOutFile.write("</body>" + '\r\n')
-            fOutFile.write("</html>" + '\r\n')
-            fOutFile.close
+        fOutFile.write("</body>" + '\r\n')
+        fOutFile.write("</html>" + '\r\n')
+        fOutFile.close
         self.textEditDaisy.append(u"<b>NCC-Datei geschrieben</b>")
 
     def writeMasterSmil(self, cTotalTime, dirAudios):
         """write MasterSmil-Page"""
         try:
-            fOutFile = open(os.path.join(str(self.lineEditDaisySource.text()), "master.smil")  , 'w')
+            fOutFile = open(
+                os.path.join(
+                    str(self.lineEditDaisySource.text()), "master.smil"), 'w')
         except IOError as (errno, strerror):
             self.showDebugMessage("I/O error({0}): {1}".format(errno, strerror))
         else:
             self.textEditDaisy.append(u"<b>MasterSmil-Datei schreiben...</b>")
-            fOutFile.write('<?xml version="1.0" encoding="utf-8"?>'+ '\r\n' )
-            fOutFile.write('<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN" "http://www.w3.org/TR/REC-smil/SMIL10.dtd">'+'\r\n')
+            fOutFile.write('<?xml version="1.0" encoding="utf-8"?>' + '\r\n')
+            fOutFile.write('<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"'
+                + ' "http://www.w3.org/TR/REC-smil/SMIL10.dtd">' + '\r\n')
             fOutFile.write('<smil>' + '\r\n')
             fOutFile.write('<head>' + '\r\n')
-            fOutFile.write('<meta name="dc:format" content="Daisy 2.02"/>'+'\r\n')
-            fOutFile.write('<meta name="dc:identifier" content="'+ self.lineEditMetaRefOrig.text()+ '"/>'+'\r\n')
-            fOutFile.write('<meta name="dc:title" content="' + self.lineEditMetaTitle.text() + '"/>'+'\r\n')
-            fOutFile.write('<meta name="ncc:generator" content="KOM-IN-DaisyCreator"/>'+'\r\n')
-            fOutFile.write('<meta name="ncc:format" content="Daisy 2.0"/>'+'\r\n')
-            fOutFile.write('<meta name="ncc:timeInThisSmil" content="' + cTotalTime +  '" />'+'\r\n')
+            fOutFile.write('<meta name="dc:format" content="Daisy 2.02"/>'
+                + '\r\n')
+            fOutFile.write('<meta name="dc:identifier" content="'
+                + self.lineEditMetaRefOrig.text() + '"/>' + '\r\n')
+            fOutFile.write('<meta name="dc:title" content="'
+                + self.lineEditMetaTitle.text() + '"/>' + '\r\n')
+            fOutFile.write('<meta name="ncc:generator"'
+                + ' content="KOM-IN-DaisyCreator"/>' + '\r\n')
+            fOutFile.write('<meta name="ncc:format" content="Daisy 2.0"/>'
+                + '\r\n')
+            fOutFile.write('<meta name="ncc:timeInThisSmil" content="'
+                + cTotalTime + '" />' + '\r\n')
 
             fOutFile.write('<layout>' + '\r\n')
             fOutFile.write('<region id="txt-view" />' + '\r\n')
@@ -628,14 +674,15 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
             fOutFile.write('</head>' + '\r\n')
             fOutFile.write('<body>' + '\r\n')
 
-            #fOutFile.write( '<ref src="0001.smil" title="'+ self.lineEditMetaTitle.text() + '" id="smil_0001"/>'+'\r\n')
             z = 0
             for item in dirAudios:
                 z += 1
                 # trennen
                 itemSplit = self.splitFilename(item)
                 cTitle = self.extractTitle(itemSplit)
-                fOutFile.write('<ref src="' + str(z).zfill(4) + '.smil" title="' + cTitle + '" id="smil_' + str(z).zfill(4) + '"/>'+'\r\n')
+                fOutFile.write(
+                    '<ref src="' + str(z).zfill(4) + '.smil" title="'
+                    + cTitle + '" id="smil_' + str(z).zfill(4) + '"/>' + '\r\n')
 
             fOutFile.write('</body>' + '\r\n')
             fOutFile.write('</smil>' + '\r\n')
@@ -651,85 +698,113 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
 
             try:
                 filename = str(z).zfill(4) + '.smil'
-                fOutFile = open(os.path.join(str(self.lineEditDaisySource.text()), filename), 'w')
+                fOutFile = open(
+                    os.path.join(
+                        str(self.lineEditDaisySource.text()), filename), 'w')
             except IOError as (errno, strerror):
-                self.showDebugMessage("I/O error({0}): {1}".format(errno, strerror) )
+                self.showDebugMessage(
+                    "I/O error({0}): {1}".format(errno, strerror))
+            #else:
+            self.textEditDaisy.append(
+                str(z).zfill(4) + u".smil - File schreiben")
+            # trennen
+            itemSplit = self.splitFilename(item)
+            cTitle = self.extractTitle(itemSplit)
+
+            fOutFile.write('<?xml version="1.0" encoding="utf-8"?>' + '\r\n')
+            fOutFile.write('<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"'
+                + ' "http://www.w3.org/TR/REC-smil/SMIL10.dtd">' + '\r\n')
+            fOutFile.write('<smil>' + '\r\n')
+            fOutFile.write('<head>' + '\r\n')
+            fOutFile.write(
+                '<meta name="ncc:generator" content="KOM-IN-DaisyCreator"/>'
+                + '\r\n')
+            totalElapsedTime = timedelta(seconds=lTotalElapsedTime[z - 1])
+            splittedTtotalElapsedTime = str(totalElapsedTime).split(".")
+            self.showDebugMessage(u"splittedTtotalElapsedTime: ")
+            self.showDebugMessage(splittedTtotalElapsedTime)
+            totalElapsedTimehhmmss = splittedTtotalElapsedTime[0].zfill(8)
+            if z == 1:
+                # erster eintrag ergibt nur einen split
+                totalElapsedTimeMilliMicro = "000"
             else:
-                self.textEditDaisy.append(str(z).zfill(4) + u".smil - File schreiben")
-                # trennen
-                itemSplit = self.splitFilename(item)
-                cTitle = self.extractTitle(itemSplit)
+                totalElapsedTimeMilliMicro = splittedTtotalElapsedTime[1][0:3]
+            fOutFile.write(
+                '<meta name="ncc:totalElapsedTime" content="'
+                + totalElapsedTimehhmmss + "." + totalElapsedTimeMilliMicro
+                + '"/>' + '\r\n')
 
-                fOutFile.write('<?xml version="1.0" encoding="utf-8"?>'+ '\r\n')
-                fOutFile.write('<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN" "http://www.w3.org/TR/REC-smil/SMIL10.dtd">'+'\r\n')
-                fOutFile.write('<smil>' + '\r\n')
-                fOutFile.write('<head>' + '\r\n')
-                fOutFile.write('<meta name="ncc:generator" content="KOM-IN-DaisyCreator"/>' + '\r\n')
-                #fOutFile.write('<meta name="ncc:format" content="Daisy 2.02"/>' + '\r\n')
-                totalElapsedTime = timedelta(seconds = lTotalElapsedTime[z-1])
-                splittedTtotalElapsedTime = str(totalElapsedTime).split(".")
-                self.showDebugMessage(u"splittedTtotalElapsedTime: ")
-                self.showDebugMessage(splittedTtotalElapsedTime)
-                totalElapsedTimehhmmss = splittedTtotalElapsedTime[0].zfill(8)
-                if z == 1:
-                    # erster eintrag ergibt nur einen split
-                    totalElapsedTimeMilliMicro = "000"
-                else:
-                    totalElapsedTimeMilliMicro = splittedTtotalElapsedTime[1][0:3]
-                #fOutFile.write( '<meta name="ncc:totalElapsedTime" content="' + str(lTotalElapsedTime[z-1] )+ '"/>')
-                #fOutFile.write( '<meta name="ncc:totalElapsedTime" content="' + str( totalElapsedTime )+ '"/>'+'\r\n')
-                fOutFile.write('<meta name="ncc:totalElapsedTime" content="' +totalElapsedTimehhmmss + "." + totalElapsedTimeMilliMicro +'"/>'+'\r\n')
+            fileTime = timedelta(seconds=lFileTime[z - 1])
+            self.showDebugMessage(u"filetime: " + str(fileTime))
+            splittedFileTime = str(fileTime).split(".")
+            FileTimehhmmss = splittedFileTime[0].zfill(8)
+            # wenn keine Millisicrosec gibts nur ein Element in der Liste
+            if len(splittedFileTime) > 1:
+                if len(splittedFileTime[1]) >= 3:
+                    fileTimeMilliMicro = splittedFileTime[1][0:3]
+                elif len(splittedFileTime[1]) == 2:
+                    fileTimeMilliMicro = splittedFileTime[1][0:2]
+            else:
+                fileTimeMilliMicro = "000"
 
-                fileTime = timedelta(seconds = lFileTime[z - 1])
-                self.showDebugMessage(u"filetime: " + str(fileTime))
-                splittedFileTime = str(fileTime).split(".")
-                FileTimehhmmss = splittedFileTime[0].zfill(8)
-                # wenn keine Millisicrosec gibts nur ein Element in der Liste
-                if len(splittedFileTime) > 1:
-                    if len(splittedFileTime[1]) >= 3:
-                        fileTimeMilliMicro = splittedFileTime[1][0:3]
-                    elif len(splittedFileTime[1]) == 2:
-                        fileTimeMilliMicro = splittedFileTime[1][0:2]
-                else:
-                    fileTimeMilliMicro = "000"
+            fOutFile.write('<meta name="ncc:timeInThisSmil" content="'
+                + FileTimehhmmss + "." + fileTimeMilliMicro + '" />' + '\r\n')
+            fOutFile.write('<meta name="dc:format" content="Daisy 2.02"/>'
+                + '\r\n')
+            fOutFile.write('<meta name="dc:identifier" content="'
+                + self.lineEditMetaRefOrig.text() + '"/>' + '\r\n')
+            fOutFile.write('<meta name="dc:title" content="'
+                + cTitle + '"/>' + '\r\n')
+            fOutFile.write('<layout>' + '\r\n')
+            fOutFile.write('<region id="txt-view"/>' + '\r\n')
+            fOutFile.write('</layout>' + '\r\n')
+            fOutFile.write('</head>' + '\r\n')
+            fOutFile.write('<body>' + '\r\n')
+            lFileTimeSeconds = str(lFileTime[z - 1]).split(".")
 
-                #fOutFile.write( '<meta name="ncc:timeInThisSmil" content="' + str(lFileTime[z-1]) + '" />'+'\r\n')
+            fOutFile.write('<seq dur="' + lFileTimeSeconds[0]
+                + '.' + fileTimeMilliMicro + 's">' + '\r\n')
+            fOutFile.write('<par endsync="last">' + '\r\n')
+            fOutFile.write('<text src="ncc.html#cnt_' + str(z).zfill(4)
+                + '" id="txt_' + str(z).zfill(4) + '" />' + '\r\n')
+            fOutFile.write('<seq>' + '\r\n')
+            if fileTime < timedelta(seconds=45):
+                fOutFile.write(
+                    '<audio src="' + item
+                    + '" clip-begin="npt=0.000s" clip-end="npt='
+                    + lFileTimeSeconds[0] + '.' + fileTimeMilliMicro
+                    + 's" id="a_' + str(z).zfill(4) + '" />' + '\r\n')
+            else:
+                fOutFile.write(
+                    '<audio src="' + item
+                    + '" clip-begin="npt=0.000s" clip-end="npt=' + str(15)
+                    + '.' + fileTimeMilliMicro + 's" id="a_'
+                    + str(z).zfill(4) + '" />' + '\r\n')
+                zz = z + 1
+                phraseSeconds = 15
+                while phraseSeconds <= lFileTime[z - 1] - 15:
+                    fOutFile.write(
+                        '<audio src="' + item + '" clip-begin="npt='
+                        + str(phraseSeconds) + '.' + fileTimeMilliMicro
+                        + 's" clip-end="npt=' + str(phraseSeconds + 15)
+                        + '.' + fileTimeMilliMicro + 's" id="a_'
+                        + str(zz).zfill(4) + '" />' + '\r\n')
+                    phraseSeconds += 15
+                    zz += 1
+                fOutFile.write(
+                    '<audio src="' + item + '" clip-begin="npt='
+                    + str(phraseSeconds) + '.' + fileTimeMilliMicro
+                    + 's" clip-end="npt=' + lFileTimeSeconds[0] + '.'
+                    + fileTimeMilliMicro + 's" id="a_' + str(zz).zfill(4)
+                    + '" />' + '\r\n')
 
-                fOutFile.write('<meta name="ncc:timeInThisSmil" content="' + FileTimehhmmss + "." + fileTimeMilliMicro +'" />'+'\r\n')
-                fOutFile.write('<meta name="dc:format" content="Daisy 2.02"/>'+'\r\n')
-                fOutFile.write('<meta name="dc:identifier" content="' + self.lineEditMetaRefOrig.text() + '"/>'+'\r\n')
-                fOutFile.write('<meta name="dc:title" content="' +  cTitle  + '"/>'+'\r\n')
-                fOutFile.write('<layout>' + '\r\n')
-                fOutFile.write('<region id="txt-view"/>' + '\r\n')
-                fOutFile.write('</layout>' + '\r\n')
-                fOutFile.write('</head>' + '\r\n')
-                fOutFile.write('<body>' + '\r\n')
-                #fOutFile.write( '<seq dur="' + FileTimehhmmss + '.' + fileTimeMilliMicro + 's">'+'\r\n')
-                lFileTimeSeconds = str(lFileTime[z-1]).split(".")
+            fOutFile.write('</seq>' + '\r\n')
+            fOutFile.write('</par>' + '\r\n')
+            fOutFile.write('</seq>' + '\r\n')
 
-                fOutFile.write('<seq dur="' + lFileTimeSeconds[0] + '.' + fileTimeMilliMicro  +'s">'+'\r\n')
-                fOutFile.write('<par endsync="last">'+'\r\n')
-                fOutFile.write('<text src="ncc.html#cnt_' + str(z).zfill(4) + '" id="txt_' + str(z).zfill(4) + '" />'+'\r\n')
-                fOutFile.write('<seq>' + '\r\n')
-                if fileTime < timedelta(seconds=45):
-                    fOutFile.write('<audio src="' + item + '" clip-begin="npt=0.000s" clip-end="npt=' + lFileTimeSeconds[0] + '.' + fileTimeMilliMicro + 's" id="a_' + str(z).zfill(4)  + '" />'+'\r\n')
-                else:
-                    fOutFile.write('<audio src="' + item + '" clip-begin="npt=0.000s" clip-end="npt=' + str(15) + '.' + fileTimeMilliMicro + 's" id="a_' + str(z).zfill(4)  + '" />'+'\r\n')
-                    zz = z + 1
-                    phraseSeconds = 15
-                    while phraseSeconds <= lFileTime[z - 1] - 15:
-                        fOutFile.write('<audio src="' + item + '" clip-begin="npt='+ str(phraseSeconds)+ '.' + fileTimeMilliMicro + 's" clip-end="npt=' + str(phraseSeconds+15) + '.' + fileTimeMilliMicro + 's" id="a_' + str(zz).zfill(4)  + '" />'+'\r\n')
-                        phraseSeconds += 15
-                        zz += 1
-                    fOutFile.write('<audio src="' + item + '" clip-begin="npt='+ str(phraseSeconds)+ '.' + fileTimeMilliMicro + 's" clip-end="npt=' + lFileTimeSeconds[0] + '.' + fileTimeMilliMicro + 's" id="a_' + str(zz).zfill(4)  + '" />'+'\r\n')
-
-                fOutFile.write('</seq>' + '\r\n')
-                fOutFile.write('</par>' + '\r\n')
-                fOutFile.write('</seq>' + '\r\n')
-
-                fOutFile.write('</body>' + '\r\n')
-                fOutFile.write('</smil>' + '\r\n')
-                fOutFile.close
+            fOutFile.write('</body>' + '\r\n')
+            fOutFile.write('</smil>' + '\r\n')
+            fOutFile.close
         self.textEditDaisy.append(u"<b>smil-Dateien geschrieben:</b> " + str(z))
 
     def splitFilename(self, item):
@@ -741,9 +816,9 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         return itemSplit
 
     def extractTitle(self, itemSplit):
-        # letzter teil
+        # last piece
         itemLeft = itemSplit[len(itemSplit) - 1]
-        # davon file-ext abtrennen
+        # cut file-extention
         itemTitle = itemLeft.split(".mp3")
         cTitle = re.sub("_", " ", itemTitle[0])
         return cTitle
@@ -766,7 +841,7 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         # set msic parameters
         self.progressBarCopy.setValue(0)
         self.progressBarDaisy.setValue(0)
-        # Trenner in Combo
+        # Splitt in Combo
         self.comboBoxDaisyTrenner.addItem("2. Unterstrich")
         # Bitrate
         self.comboBoxPrefBitrate.addItem("64")
