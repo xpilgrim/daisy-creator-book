@@ -7,15 +7,21 @@ Distributed under the terms of GNU GPL version 2 or later
 Copyright (C) Joerg Sorge joergsorge at gooogel
 2012-06-20
 
+This program is for
+- copy mp3 files for processing for DAISY Talking Books
+- create DAISY Fileset
+
 Dieses Programm
 - kopiert mp3-Files fuer die Verarbeitung zu Daisy-Buechern
 - erzeugt die noetigen Dateien fuer eine Daisy-Struktur.
 
+Additional python modul necessary:
 Zusatz-Modul benoetigt:
 python-mutagen
 lame
 sudo apt-get install python-mutagen lame
 
+update gui with:
 GUI aktualisieren mit:
 pyuic4 daisy_creator_book.ui -o daisy_creator_book_ui.py
 """
@@ -187,6 +193,11 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
             self.showDebugMessage(logMessage)
 
         self.showDebugMessage(dirsSource)
+        self.textEdit.append("<b>Pruefen...</b>")
+        checkOK = self.checkFilenames(dirsSource)
+        if checkOK is None:
+            return
+
         self.textEdit.append("<b>Kopieren:</b>")
         z = 0
         nDirsSource = len(dirsSource)
@@ -264,29 +275,90 @@ class DaisyCopy(QtGui.QMainWindow, daisy_creator_book_ui.Ui_DaisyMain):
         if tag is not None:
             if self.checkBoxCopyID3Change.isChecked():
                 audio.delete()
-                self.textEdit.append("<b>ID3 entfernt bei</b>: " + fileToCopyDest)
+                self.textEdit.append("<b>ID3 entfernt bei</b>: "
+                        + fileToCopyDest)
                 self.showDebugMessage(u"ID3 entfernt bei " + fileToCopyDest)
             else:
-                self.textEdit.append("<b>ID3 vorhanden, aber NICHT entfernt bei</b>: " + fileToCopyDest)
+                self.textEdit.append(
+                        "<b>ID3 vorhanden, aber NICHT entfernt bei</b>: "
+                        + fileToCopyDest)
 
     def checkChangeBitrateAndCopy(self, fileToCopySource, fileToCopyDest):
         """check Bitrate, maybe change it """
         isChangedAndCopy = None
         audioSource = MP3(fileToCopySource)
-        if audioSource.info.bitrate != int(self.comboBoxPrefBitrate.currentText())*1000:
-            isEncoded = None
-            self.textEdit.append(u"Bitrate Vorgabe: " + str(self.comboBoxPrefBitrate.currentText()))
-            self.textEdit.append(u"<b>Bitrate folgender Datei entspricht nicht der Vorgabe:</b> " + str(audioSource.info.bitrate/1000) + " " + fileToCopySource)
+        if (audioSource.info.bitrate ==
+            int(self.comboBoxPrefBitrate.currentText()) * 1000):
+            return isChangedAndCopy
 
-            if self.checkBoxCopyBitrateChange.isChecked():
-                self.textEdit.append(u"<b>Bitrate aendern bei</b>: " + fileToCopyDest)
-                isEncoded = self.encodeFile( fileToCopySource, fileToCopyDest )
-                if isEncoded is not None:
-                    self.textEdit.append(u"<b>Bitrate geaendert bei</b>: " + fileToCopyDest)
-                    isChangedAndCopy = True
-            else:
-                self.textEdit.append(u"<b>Bitrate wurde NICHT geaendern bei</b>: " + fileToCopyDest)
+        isEncoded = None
+        self.textEdit.append(u"Bitrate Vorgabe: "
+                + str(self.comboBoxPrefBitrate.currentText()))
+        self.textEdit.append(
+            u"<b>Bitrate folgender Datei entspricht nicht der Vorgabe:</b> "
+            + str(audioSource.info.bitrate / 1000) + " " + fileToCopySource)
+
+        if self.checkBoxCopyBitrateChange.isChecked():
+            self.textEdit.append(u"<b>Bitrate aendern bei</b>: "
+                        + fileToCopyDest)
+            isEncoded = self.encodeFile(fileToCopySource, fileToCopyDest)
+            if isEncoded is not None:
+                self.textEdit.append(u"<b>Bitrate geaendert bei</b>: "
+                            + fileToCopyDest)
+                isChangedAndCopy = True
+        else:
+            self.textEdit.append(
+                u"<b>Bitrate wurde NICHT geaendern bei</b>: "
+                + fileToCopyDest)
         return isChangedAndCopy
+
+    def checkFilename(self, fileName):
+        """check for spaces and non ascii characters"""
+        error = None
+        self.textEdit.append(fileName)
+        if type(fileName) is str:
+            try:
+                cfileName = fileName.encode("ascii")
+            except Exception, e:
+                error = str(e)
+        else:
+            # maybe fileName could be QString, so we must convert it
+            try:
+                cfileName = str(fileName)
+                self.textEdit.append(cfileName)
+            except Exception, e:
+                error = str(e)
+
+        if error is not None:
+            if (error.find("'ascii' codec can't encode character") != -1
+                or
+                error.find("'ascii' codec can't decode byte") != -1):
+                errorMessage = ("<b>Unerlaubte(s) Zeichen im Dateinamen!</b>")
+                self.showDebugMessage(errorMessage)
+                self.textEdit.append(errorMessage)
+                return None
+            else:
+                errorMessage = ("<b>Fehler im Dateinamen!</b>")
+                self.showDebugMessage(errorMessage)
+                self.textEdit.append(errorMessage)
+                self.tabWidget.setCurrentIndex(1)
+                return None
+
+        if cfileName.find(" ") != -1:
+            errorMessage = ("<b>Unerlaubtes Leerzeichen im Dateinamen!</b>")
+            self.textEdit.append(errorMessage)
+            return None
+        return "OK"
+
+    def checkFilenames(self, filesSource):
+        for item in filesSource:
+            if (item[len(item) - 4:len(item)] != ".MP3"
+                                and item[len(item) - 4:len(item)] != ".mp3"):
+                continue
+            checkOK = self.checkFilename(item)
+            if checkOK is None:
+                return None
+        return "OK"
 
     def encodeFile(self, fileToCopySource, fileToCopyDest):
         """encode mp3-files """
